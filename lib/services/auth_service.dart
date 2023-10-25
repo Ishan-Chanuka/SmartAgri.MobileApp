@@ -15,20 +15,25 @@ class AuthService {
   }
 
   Future<Map<String, dynamic>> login(String email, String password) async {
-    try {
-      final url = Uri.parse('$baseUrl/api/Account/login');
-      final headers = {'Content-Type': 'application/json'};
-      final body = jsonEncode({'email': email, 'password': password});
+  try {
+    final url = Uri.parse('$baseUrl/api/Account/login');
+    final headers = {'Content-Type': 'application/json'};
+    final body = jsonEncode({'email': email, 'password': password});
 
-      final response = await http.post(url, headers: headers, body: body);
+    final response = await http.post(url, headers: headers, body: body);
 
-      if (response.statusCode == 200) {
-        final Map<String, dynamic> responseData = jsonDecode(response.body);
-        final res = responseData['_data'];
-        final token = responseData['token'];
-        final userRole = responseData['role'];
-        final regCode = responseData['reistrationCode'];
-        final isLocation = responseData['isLocationConfirm'];
+    print("response ${response}");
+
+    if (response.statusCode == 200) {
+      final Map<String, dynamic> responseData = jsonDecode(response.body);
+      final bool success = responseData['success'];
+
+      if (success) {
+        final Map<String, dynamic> data = responseData['data'];
+        final String token = data['token'];
+        final String userRole = data['role'];
+        final String regCode = data['reistrationCode'];
+        final bool isLocation = data['isLocationConfirm'];
 
         try {
           final prefs = await SharedPreferences.getInstance();
@@ -40,14 +45,17 @@ class AuthService {
           throw Exception('Error getting shared preferences: $e');
         }
 
-        return responseData;
+        return data;
       } else {
-        throw Exception('Failed to login: ${response.statusCode}');
+        throw Exception('Login failed: ${responseData['message']}');
       }
-    } catch (e) {
-      throw Exception('Failed to login: $e');
+    } else {
+      throw Exception('Failed to login: ${response.statusCode}');
     }
+  } catch (e) {
+    throw Exception('Failed to login: $e');
   }
+}
   
 
   Future<void> logout(BuildContext context) async {
@@ -79,7 +87,7 @@ class AuthService {
   Future<String> getUserRoleFromPrefs() async {
     try {
       final prefs = await SharedPreferences.getInstance();
-      final String? role = prefs.getString('userRole');
+      final String? role = prefs.getString('role');
       return role ?? ''; // return an empty string if token is null
     } catch (e) {
       throw Exception('Error while getting user role: $e');
@@ -119,11 +127,11 @@ class AuthService {
     return true; // default to true if token is null or empty
   }
 
-  Future<bool> isAdmin() async {
+  Future<bool> isFarmer() async {
     try {
       final role = await getUserRoleFromPrefs();
       if (role.isNotEmpty) {
-        if (role == 'admin') {
+        if (role == 'SuperAdmin') {
           return true;
         }
         return false;
@@ -158,4 +166,6 @@ class AuthService {
       throw Exception('Error while getting user name: $e');
     }
   }
+
+  
 }

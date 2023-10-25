@@ -1,6 +1,7 @@
 // ignore_for_file: camel_case_types
 
 import 'package:flutter/material.dart';
+import 'package:smartagri/screens/distributor_home.dart';
 import 'package:smartagri/screens/farmer_home.dart';
 import 'package:smartagri/services/auth_service.dart';
 import 'colors.dart';
@@ -39,8 +40,9 @@ class _loginScreenState extends State<loginScreen> {
     if (_validateEmail(_emailController.text) &&
         _validatePassword(_passwordController.text)) {
       try {
-        await _authService.login(
+        final res = await _authService.login(
             _emailController.text, _passwordController.text);
+        // Successful login
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(
             content: Text("Login successful!",
@@ -48,10 +50,23 @@ class _loginScreenState extends State<loginScreen> {
             backgroundColor: Colors.green,
           ),
         );
-        // Navigate to login page
-        Navigator.pushReplacementNamed(context, '/home');
+        print(res);
+
+        if (res['role'] == "SuperAdmin") {
+          // Navigate to the home page
+          Navigator.push(
+            context,
+            MaterialPageRoute(builder: (context) => const Distributor_Home()),
+          );
+        } else {
+          // Navigate to the home page
+          Navigator.push(
+            context,
+            MaterialPageRoute(builder: (context) => const Farmer_Home()),
+          );
+        }
       } catch (e) {
-        // Signup failed, show error message or handle the error
+        // Handle the login failure and show an error message
         print(e);
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(
@@ -61,9 +76,10 @@ class _loginScreenState extends State<loginScreen> {
         );
       }
     } else {
+      // Validation failed, show a single error message
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
-          content: Text("Email and password is required!"),
+          content: Text("Email and password are required!"),
           backgroundColor: Colors.red,
         ),
       );
@@ -80,7 +96,6 @@ class _loginScreenState extends State<loginScreen> {
     width = size.width;
 
     return Scaffold(
-      
       body: SingleChildScrollView(
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
@@ -113,14 +128,14 @@ class _loginScreenState extends State<loginScreen> {
                       color: Colors.black,
                     ),
                   ),
-                  SizedBox(height: 10,),
+                  SizedBox(
+                    height: 10,
+                  ),
                   TextField(
                     controller: _emailController,
                     textAlign: TextAlign.left,
                     decoration: InputDecoration(
-                      
                       border: OutlineInputBorder(
-                        
                         borderRadius: BorderRadius.circular(12.0),
                       ),
                     ),
@@ -154,7 +169,6 @@ class _loginScreenState extends State<loginScreen> {
                   const SizedBox(
                     height: 40,
                   ),
-                 
                 ],
               ),
             ),
@@ -183,7 +197,9 @@ class _loginScreenState extends State<loginScreen> {
                 ),
               ),
             ),
-            const SizedBox(height: 15,),
+            const SizedBox(
+              height: 15,
+            ),
           ],
         ),
       ),
